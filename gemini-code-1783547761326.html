@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicredit - Sistema de Crédito Automatizado</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .bg-servicredit-blue { background-color: #0b3c5d; }
+        .text-servicredit-blue { color: #0b3c5d; }
+        .border-servicredit-blue { border-color: #0b3c5d; }
+        .step-active { background-color: #328cc1; color: white; }
+        .step-todo { background-color: #d1d5db; color: #374151; }
+        .transition-all { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between max-w-md mx-auto bg-white shadow-2xl relative overflow-x-hidden">
+
+    <header class="bg-servicredit-blue text-white px-4 py-3 flex justify-between items-center sticky top-0 z-40 shadow-md">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-building-columns text-xl text-sky-400"></i>
+            <div>
+                <h1 class="text-sm font-bold tracking-wider uppercase">Servicredit</h1>
+                <p class="text-[10px] text-gray-300">COOPAC • Perú</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3 text-xs">
+            <span class="bg-blue-900 px-2 py-1 rounded text-[11px] font-mono">
+                <i class="fa-solid fa-clock mr-1 text-sky-300"></i><span id="session-timer">10:00</span>
+            </span>
+            <div id="user-avatar" class="hidden flex items-center space-x-1">
+                <div class="w-7 h-7 bg-sky-500 rounded-full flex items-center justify-center font-bold text-white uppercase text-xs shadow-inner" id="avatar-letters">S</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow p-4 overflow-y-auto">
+
+        <div id="notification" class="hidden mb-4 p-3 rounded-lg border flex items-center space-x-3 shadow-sm transform translate-y-2 transition-all duration-300">
+            <i id="notif-icon" class="fa-solid text-lg"></i>
+            <p id="notif-text" class="text-xs font-medium"></p>
+        </div>
+
+        <section id="view-login" class="space-y-6 pt-4">
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 bg-blue-50 text-servicredit-blue rounded-full flex items-center justify-center mx-auto shadow-sm">
+                    <i class="fa-solid fa-shield-halved text-3xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800">Banca Segura Socios</h2>
+                <p class="text-xs text-gray-500 px-4">Portal de Evaluación y Solicitud Inmediata de Créditos Automatizados</p>
+            </div>
+
+            <div class="bg-gray-50 p-5 rounded-xl border border-gray-100 space-y-4 shadow-inner">
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-600 block">Correo Electrónico</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-envelope absolute left-3 top-3 text-gray-400 text-sm"></i>
+                        <input type="email" id="login-email" value="socio@servicredit.pe" class="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-600 block">Contraseña</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400 text-sm"></i>
+                        <input type="password" id="login-pass" value="123456" class="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-servicredit-blue hover:bg-opacity-95 text-white py-2.5 rounded-lg text-sm font-semibold tracking-wide shadow transition-all active:scale-[0.99] mt-2">
+                    Iniciar Sesión <i class="fa-solid fa-arrow-right-to-bracket ml-1"></i>
+                </button>
+            </div>
+            
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-[11px] text-amber-800 flex items-start space-x-2">
+                <i class="fa-solid fa-circle-info mt-0.5"></i>
+                <p><strong>Credenciales de evaluación:</strong><br>Usar los datos precargados para simular el acceso directo como socio activo verificado.</p>
+            </div>
+        </section>
+
+        <section id="view-dashboard" class="hidden space-y-5">
+            <div class="bg-gradient-to-br from-[#0b3c5d] to-[#1d5c87] rounded-xl p-4 text-white shadow-md relative overflow-hidden">
+                <div class="absolute -right-8 -bottom-8 opacity-10 text-9xl">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="bg-sky-400/20 text-sky-300 text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded">Socio Activo</span>
+                        <h3 class="text-base font-bold mt-1" id="dash-socio-name">Cargando...</h3>
+                        <p class="text-xs text-gray-300" id="dash-socio-id">DNI: --</p>
+                    </div>
+                    <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/10 text-center">
+                    <div>
+                        <p class="text-[10px] text-gray-300 uppercase">Aportes Totales</p>
+                        <p class="text-sm font-semibold text-sky-200">S/ 4,850.00</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-300 uppercase">Línea Pre-Aprobada</p>
+                        <p class="text-sm font-semibold text-emerald-300">S/ 25,000.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start space-x-3">
+                <div class="p-2 bg-blue-500 rounded-lg text-white mt-0.5">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-blue-900">Crédito Inmediato Digital</h4>
+                    <p class="text-[11px] text-blue-700 mt-0.5">Evaluación impulsada por scoring automatizado. Pasamos de un proceso tradicional en hojas Excel que demoraba 3 días, a una aprobación directa en minutos.</p>
+                </div>
+            </div>
+
+            <button onclick="startFlow()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-xl font-bold text-sm tracking-wide shadow-md flex justify-between items-center transition-all transform active:scale-95">
+                <span>SOLICITAR NUEVO CRÉDITO YA</span>
+                <i class="fa-solid fa-circle-arrow-right text-lg"></i>
+            </button>
+
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center">
+                    <i class="fa-solid fa-chart-simple mr-1.5 text-gray-500"></i> Tasas Comparativas Referenciales
+                </h4>
+                <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm text-xs bg-white">
+                    <div class="grid grid-cols-3 bg-gray-100 font-bold text-gray-600 p-2.5 border-b border-gray-200 text-center">
+                        <div>Tipo</div>
+                        <div>Tasa Mensual</div>
+                        <div>Plazo Máx.</div>
+                    </div>
+                    <div class="grid grid-cols-3 p-2.5 border-b border-gray-100 text-center items-center">
+                        <div class="font-medium text-left pl-1">Consumo Directo</div>
+                        <div class="text-emerald-600 font-semibold">2.0% (Fija)</div>
+                        <div class="text-gray-500">24 meses</div>
+                    </div>
+                    <div class="grid grid-cols-3 p-2.5 border-b border-gray-100 text-center items-center bg-gray-50/50">
+                        <div class="font-medium text-left pl-1">Microempresa MYPE</div>
+                        <div class="text-blue-600 font-semibold">1.8%</div>
+                        <div class="text-gray-500">36 meses</div>
+                    </div>
+                    <div class="grid grid-cols-3 p-2.5 text-center items-center">
+                        <div class="font-medium text-left pl-1">Crédito Comercial</div>
+                        <div class="text-blue-600 font-semibold">1.5%</div>
+                        <div class="text-gray-500">48 meses</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <nav id="flow-progress" class="hidden mb-6 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+            <div class="flex justify-between items-center relative">
+                <div class="absolute left-2 right-2 top-4 h-0.5 bg-gray-200 -z-10" id="progress-line-bg"></div>
+                <div class="absolute left-2 top-4 h-0.5 bg-sky-500 -z-10 transition-all duration-500" id="progress-line-fill" style="width: 0%;"></div>
+                
+                <div class="flex flex-col items-center space-y-1 z-10">
+                    <div id="step-dot-1" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-all duration-300 step-active">1</div>
+                    <span class="text-[9px] font-medium text-gray-500">Datos</span>
+                </div>
+                <div class="flex flex-col items-center space-y-1 z-10">
+                    <div id="step-dot-2" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-all duration-300 step-todo">2</div>
+                    <span class="text-[9px] font-medium text-gray-500">Docs</span>
+                </div>
+                <div class="flex flex-col items-center space-y-1 z-10">
+                    <div id="step-dot-3" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-all duration-300 step-todo">3</div>
+                    <span class="text-[9px] font-medium text-gray-500">Scoring</span>
+                </div>
+                <div class="flex flex-col items-center space-y-1 z-10">
+                    <div id="step-dot-4" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-all duration-300 step-todo">4</div>
+                    <span class="text-[9px] font-medium text-gray-500">Resultado</span>
+                </div>
+            </div>
+        </nav>
+
+        <section id="view-step1" class="hidden space-y-4">
+            <div class="border-l-4 border-servicredit-blue pl-2 mb-2">
+                <h3 class="text-sm font-bold text-gray-800 uppercase">1. Formulario de Solicitud</h3>
+                <p class="text-[11px] text-gray-500">Ingrese montos y plazos requeridos para validar políticas iniciales.</p>
+            </div>
+
+            <div class="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div class="grid grid-cols-3 gap-2 items-center">
+                    <label class="text-xs font-semibold text-gray-600">Nombre Completo</label>
+                    <input type="text" id="form-name" value="Viviana Reyna Ortiz Chua" class="col-span-2 p-2 text-xs bg-white border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" readonly>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-2 items-center">
+                    <label class="text-xs font-semibold text-gray-600">N° de Cédula (DNI)</label>
+                    <input type="text" id="form-dni" value="47592811" class="col-span-2 p-2 text-xs bg-white border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" readonly>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 items-center">
+                    <label class="text-xs font-semibold text-gray-600">Ocupación / Rubro</label>
+                    <select id="form-job" class="col-span-2 p-2 text-xs bg-white border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="MYPE">Microempresario Comercial (MYPE)</option>
+                        <option value="Dependiente" selected>Trabajador Dependiente</option>
+                        <option value="Independiente">Profesional Independiente</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 items-center">
+                    <label class="text-xs font-semibold text-gray-600">Edad (Años)</label>
+                    <div class="col-span-2 relative">
+                        <input type="number" id="form-age" value="28" oninput="validateRealTimeFields()" class="w-full p-2 text-xs bg-white border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <span id="val-age" class="absolute right-2 top-2.5 text-[10px]"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 items-center">
+                    <label class="text-xs font-semibold text-gray-600">Ingreso Mensual</label>
+                    <div class="col-span-2 relative">
+                        <span class="absolute left-2 top-2 text-xs text-gray-400 font-medium">S/</span>
+                        <input type="number" id="form-income" value="3200" oninput="validateRealTimeFields()" class="w-full pl-7 pr-8 p-2 text-xs bg-white border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <span id="val-income" class="absolute right-2 top-2.5 text-[10px]"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 items-center">
+                    <label class="text-xs font-semibold text-gray-600">Monto Solicitado</label>
+                    <div class="col-span-2 relative">
+                        <span class="absolute left-2 top-2 text-xs text-gray-400 font-medium">S/</span>
+                        <input type="number" id="form-amount" value="5000" oninput="validateRealTimeFields()" class="w-full pl-7 pr-8 p-2 text-xs bg-white border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <span id="val-amount" class="absolute right-2 top-2.5 text-[10px]"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 items-center">
+                    <label class="text-xs font-semibold text-gray-600">Plazo Requerido</label>
+                    <div class="col-span-2 relative">
+                        <input type="number" id="form-months" value="12" oninput="validateRealTimeFields()" class="w-full pr-12 p-2 text-xs bg-white border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <span class="absolute right-2 top-2 text-[10px] text-gray-400">meses</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-100 rounded-xl p-3 flex justify-between items-center border border-gray-200">
+                <div class="text-xs text-gray-600 font-medium">
+                    <i class="fa-solid fa-calculator mr-1 text-gray-400"></i> Cuota mensual estimada (Tasa 2%):
+                </div>
+                <div class="text-sm font-bold text-servicredit-blue" id="live-cuota">S/ 0.00</div>
+            </div>
+
+            <button onclick="submitStep1()" id="btn-validate-sol" class="w-full bg-servicredit-blue hover:bg-opacity-95 text-white p-3 rounded-lg text-xs font-semibold tracking-wide flex justify-center items-center space-x-2 shadow">
+                <span>Validar Políticas de Admisión</span>
+                <i class="fa-solid fa-circle-check"></i>
+            </button>
+        </section>
+
+        <section id="view-step2" class="hidden space-y-4">
+            <div class="border-l-4 border-servicredit-blue pl-2 mb-2">
+                <h3 class="text-sm font-bold text-gray-800 uppercase">2. Validación Inteligente de Documentos</h3>
+                <p class="text-[11px] text-gray-500">El sistema efectúa un cruce inmediato OCR y cotejo registral digital.</p>
+            </div>
+
+            <div class="space-y-2.5">
+                <div class="bg-white border border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-id-card"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-700">Cédula de Identidad (DNI)</h4>
+                            <p class="text-[10px] text-gray-400">Validación RENIEC directa online</p>
+                        </div>
+                    </div>
+                    <div id="status-doc-1" class="text-xs font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded flex items-center space-x-1">
+                        <i class="fa-solid fa-spinner animate-spin"></i> <span>Pendiente</span>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-700">Comprobante de Ingreso</h4>
+                            <p class="text-[10px] text-gray-400">Verificación SUNAT tributaria</p>
+                        </div>
+                    </div>
+                    <div id="status-doc-2" class="text-xs font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded flex items-center space-x-1">
+                        <i class="fa-solid fa-spinner animate-spin"></i> <span>Pendiente</span>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-700">Últimas 3 Boletas de Pago</h4>
+                            <p class="text-[10px] text-gray-400">Consistencia bancaria empleador</p>
+                        </div>
+                    </div>
+                    <div id="status-doc-3" class="text-xs font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded flex items-center space-x-1">
+                        <i class="fa-solid fa-spinner animate-spin"></i> <span>Pendiente</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="doc-simulation-box" class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-center space-y-2">
+                <p class="text-xs font-medium text-gray-600 flex justify-center items-center" id="doc-sim-text">
+                    <i class="fa-solid fa-robot mr-1.5 text-blue-500 animate-bounce"></i> Iniciando análisis automatizado...
+                </p>
+                <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-blue-600 h-full w-0 transition-all duration-1000" id="doc-sim-progress"></div>
+                </div>
+            </div>
+
+            <button onclick="submitStep2()" id="btn-proceed-evaluation" disabled class="w-full bg-gray-300 text-gray-500 p-3 rounded-lg text-xs font-semibold tracking-wide flex justify-center items-center space-x-2 transition-all cursor-not-allowed">
+                <span>Proceder a Evaluación Financiera</span>
+                <i class="fa-solid fa-circle-arrow-right"></i>
+            </button>
+        </section>
+
+        <section id="view-step3" class="hidden space-y-4">
+            <div class="border-l-4 border-servicredit-blue pl-2 mb-2">
+                <h3 class="text-sm font-bold text-gray-800 uppercase">3. Motor de Scoring Automatizado</h3>
+                <p class="text-[11px] text-gray-500">Reglas paramétricas calculadas sobre la capacidad líquida real.</p>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-4 text-center space-y-2 shadow-sm">
+                <p class="text-[11px] uppercase font-bold tracking-wider text-gray-400">Puntaje Crediticio Generado</p>
+                <div class="relative w-28 h-28 mx-auto flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <path class="text-gray-100" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path id="score-circle-bar" class="text-emerald-500 transition-all duration-1000" stroke-dasharray="0, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div class="absolute text-center">
+                        <span id="score-number" class="text-2xl font-black text-gray-800">0</span>
+                        <span class="text-xs text-gray-400 font-semibold">/100</span>
+                    </div>
+                </div>
+                <div class="inline-block px-3 py-1 rounded-full text-xs font-bold" id="score-label-badge">
+                    Calculando...
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-xl p-3 space-y-2 border border-gray-100 text-xs">
+                <h4 class="font-bold text-gray-600 border-b border-gray-200 pb-1 uppercase tracking-tight text-[10px]">Criterios Evaluados Directamente</h4>
+                
+                <div class="flex justify-between items-center py-0.5">
+                    <span class="text-gray-500">Relación Ingreso vs Cuota (Ratio)</span>
+                    <span class="font-semibold text-gray-700 flex items-center" id="crit-ratio"><i class="fa-solid fa-spinner animate-spin mr-1"></i>--</span>
+                </div>
+                <div class="flex justify-between items-center py-0.5">
+                    <span class="text-gray-500">Edad y Capacidad Productiva</span>
+                    <span class="font-semibold text-gray-700 flex items-center" id="crit-age"><i class="fa-solid fa-spinner animate-spin mr-1"></i>--</span>
+                </div>
+                <div class="flex justify-between items-center py-0.5">
+                    <span class="text-gray-500">Historial Externo (SBS / Infocorp)</span>
+                    <span class="font-semibold text-gray-700 flex items-center" id="crit-history"><i class="fa-solid fa-spinner animate-spin mr-1"></i>--</span>
+                </div>
+            </div>
+
+            <button onclick="submitStep3()" id="btn-send-approval" disabled class="w-full bg-gray-300 text-gray-500 p-3 rounded-lg text-xs font-semibold tracking-wide flex justify-center items-center space-x-2 shadow transition-all cursor-not-allowed">
+                <span>Enviar y Confirmar Desembolso</span>
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </section>
+
+        <section id="view-step4" class="hidden space-y-4">
+            <div id="box-approved" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center space-y-3 shadow-sm">
+                <div class="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xl mx-auto shadow">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-emerald-800">¡Crédito Aprobado!</h3>
+                    <p class="text-xs text-emerald-600 mt-0.5">Firma e instrumentación digital disponible de inmediato.</p>
+                </div>
+
+                <div class="bg-white border border-emerald-100 rounded-lg p-3 text-left space-y-2 text-xs">
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span class="text-gray-500">Monto Otorgado:</span>
+                        <span class="font-bold text-gray-800" id="res-amount">S/ 0.00</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span class="text-gray-500">Plazo Concedido:</span>
+                        <span class="font-semibold text-gray-800" id="res-months">-- meses</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span class="text-gray-500">Tasa Efectiva Mensual:</span>
+                        <span class="font-bold text-emerald-600">2.0% (Fija)</span>
+                    </div>
+                    <div class="flex justify-between pt-0.5 font-medium">
+                        <span class="text-gray-700 font-bold">Cuota Fija Mensual:</span>
+                        <span class="text-sm font-black text-servicredit-blue" id="res-cuota">S/ 0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="box-rejected" class="hidden bg-rose-50 border border-rose-200 rounded-xl p-4 text-center space-y-3 shadow-sm">
+                <div class="w-12 h-12 bg-rose-500 text-white rounded-full flex items-center justify-center text-xl mx-auto shadow">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-rose-800">Solicitud Denegada</h3>
+                    <p class="text-xs text-rose-600 mt-0.5">El nivel de riesgo excede los límites automáticos de la COOPAC.</p>
+                </div>
+
+                <div class="bg-white border border-rose-100 rounded-lg p-3 text-left space-y-1.5 text-xs">
+                    <p class="font-bold text-gray-700">Razón detectada:</p>
+                    <p class="text-gray-500" id="res-reject-reason">Ingreso mensual insuficiente frente a la carga de cuota solicitada (< 1.5 veces).</p>
+                    <p class="font-bold text-gray-700 mt-2">Recomendaciones estratégicas:</p>
+                    <ul class="list-disc pl-4 text-gray-500 space-y-1 text-[11px]">
+                        <li>Disminuir el monto del capital solicitado a evaluar.</li>
+                        <li>Extender el plazo en meses para amortiguar el impacto de la cuota.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="downloadPDFSim()" class="bg-gray-800 hover:bg-gray-900 text-white p-2.5 rounded-lg text-xs font-semibold flex justify-center items-center space-x-2 shadow transition-all active:scale-95">
+                    <i class="fa-solid fa-file-pdf"></i> <span>Descargar PDF</span>
+                </button>
+                <button onclick="resetToDashboard()" class="bg-servicredit-blue hover:bg-opacity-95 text-white p-2.5 rounded-lg text-xs font-semibold flex justify-center items-center space-x-2 shadow transition-all active:scale-95">
+                    <i class="fa-solid fa-house"></i> <span>Ir al Dashboard</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="fixed bottom-4 right-4 z-50 flex flex-col items-end">
+        <div id="chat-box" class="hidden w-72 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden mb-2 transition-all duration-300">
+            <div class="bg-servicredit-blue text-white p-3 flex justify-between items-center text-xs font-bold">
+                <div class="flex items-center space-x-1.5">
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                    <span>Soporte Servicredit Digital</span>
+                </div>
+                <button onclick="toggleChat()" class="text-gray-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-3 h-48 overflow-y-auto text-xs space-y-2.5 bg-gray-50" id="chat-messages">
+                <div class="bg-white p-2 rounded-lg border border-gray-200 text-gray-600 shadow-sm max-w-[85%]">
+                    Hola, soy el asistente automatizado. ¿Tienes dudas sobre tu nivel de scoring o las validaciones regulatorias SBS?
+                </div>
+            </div>
+            <div class="p-2 bg-white border-t border-gray-100 flex items-center space-x-1">
+                <input type="text" id="chat-input" placeholder="Escribe tu consulta..." class="w-full text-xs p-1.5 bg-gray-50 border border-gray-200 rounded focus:outline-none">
+                <button onclick="sendChatMessage()" class="bg-blue-600 text-white p-1.5 rounded text-xs px-2.5"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button onclick="toggleChat()" class="w-10 h-10 bg-servicredit-blue hover:bg-opacity-90 text-white rounded-full flex items-center justify-center shadow-lg transform active:scale-90 transition-all">
+            <i class="fa-solid fa-comments text-base"></i>
+        </button>
+    </div>
+
+    <footer class="bg-gray-100 border-t border-gray-200 text-center py-2.5 text-[10px] text-gray-500">
+        © 2026 Servicredit S.A. Regularizado por la SBS (COOPAC)
+    </footer>
+
+    <script>
+        // Global App Variables / Mock State
+        let currentSocio = {
+            email: "socio@servicredit.pe",
+            name: "Viviana Reyna Ortiz Chua",
+            dni: "47592811",
+            income: 3200
+        };
+
+        let timerInterval = null;
+        let activeViewId = "view-login";
+
+        // Real-Time Calculation Logic
+        function calculateCuota(amount, months) {
+            if (!amount || !months || amount <= 0 || months <= 0) return 0;
+            const TASA_MENSUAL = 0.02; // 2% fija simulada
+            return (amount / months) + (amount * TASA_MENSUAL);
+        }
+
+        function validateRealTimeFields() {
+            const age = parseFloat(document.getElementById('form-age').value) || 0;
+            const income = parseFloat(document.getElementById('form-income').value) || 0;
+            const amount = parseFloat(document.getElementById('form-amount').value) || 0;
+            const months = parseFloat(document.getElementById('form-months').value) || 1;
+
+            // Update live cuota preview text
+            const cuota = calculateCuota(amount, months);
+            document.getElementById('live-cuota').innerText = `S/ ${cuota.toFixed(2)}`;
+
+            // Inline validations UI updates
+            const valAge = document.getElementById('val-age');
+            if (age >= 18 && age <= 75) {
+                valAge.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500"></i>';
+            } else {
+                valAge.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-500"></i>';
+            }
+
+            const valIncome = document.getElementById('val-income');
+            if (income >= 1025) { // Sueldo mínimo vital referencial peruano
+                valIncome.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500"></i>';
+            } else {
+                valIncome.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-500"></i>';
+            }
+
+            const valAmount = document.getElementById('val-amount');
+            if (amount > 0 && amount <= 50000) {
+                valAmount.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500"></i>';
+            } else {
+                valAmount.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-500"></i>';
+            }
+        }
+
+        // View Transition Helper with micro-animation trigger
+        function switchView(targetViewId) {
+            document.getElementById(activeViewId).classList.add('hidden');
+            const nextView = document.getElementById(targetViewId);
+            nextView.classList.remove('hidden');
+            
+            // Apply mini-fade animation trigger
+            nextView.style.opacity = 0;
+            setTimeout(() => { nextView.style.opacity = 1; nextView.style.transition = 'opacity 0.25s ease-in-out'; }, 30);
+
+            activeViewId = targetViewId;
+
+            // Handle progress bar visibility
+            const progressNav = document.getElementById('flow-progress');
+            if (['view-step1', 'view-step2', 'view-step3', 'view-step4'].includes(targetViewId)) {
+                progressNav.classList.remove('hidden');
+            } else {
+                progressNav.classList.add('hidden');
+            }
+        }
+
+        // Timer Execution
+        function startSessionTimer() {
+            let totalSeconds = 600; // 10 minutos
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                totalSeconds--;
+                if (totalSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Su sesión de seguridad ha expirado.");
+                    location.reload();
+                }
+                const min = Math.floor(totalSeconds / 60);
+                const sec = totalSeconds % 60;
+                document.getElementById('session-timer').innerText = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+            }, 1000);
+        }
+
+        // Notification Dispatcher
+        function triggerNotification(text, type = 'info') {
+            const container = document.getElementById('notification');
+            const icon = document.getElementById('notif-icon');
+            const textEl = document.getElementById('notif-text');
+
+            container.className = "mb-4 p-3 rounded-lg border flex items-center space-x-3 shadow-sm transform transition-all duration-300";
+            
+            if (type === 'success') {
+                container.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+                icon.className = "fa-solid fa-circle-check text-emerald-500 text-lg";
+            } else if (type === 'error') {
+                container.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-800');
+                icon.className = "fa-solid fa-circle-xmark text-rose-500 text-lg";
+            } else {
+                container.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-800');
+                icon.className = "fa-solid fa-bell text-blue-500 text-lg";
+            }
+
+            textEl.innerText = text;
+            container.classList.remove('hidden');
+
+            setTimeout(() => {
+                container.classList.add('hidden');
+            }, 4500);
+        }
+
+        // PANTALLA 0: LOGIN PROCESS
+        function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+
+            if (email === "socio@servicredit.pe" && pass === "123456") {
+                // Set text data dynamically
+                document.getElementById('dash-socio-name').innerText = currentSocio.name;
+                document.getElementById('dash-socio-id').innerText = `DNI: ${currentSocio.dni}`;
+                
+                // Show avatar styling
+                document.getElementById('user-avatar').classList.remove('hidden');
+                
+                startSessionTimer();
+                switchView('view-dashboard');
+                triggerNotification(`Bienvenido de vuelta, Sr(a). ${currentSocio.name.split(' ')[0]}`, 'success');
+            } else {
+                triggerNotification("Credenciales incorrectas. Verifique los requerimientos informados.", "error");
+            }
+        }
+
+        // Start request flow directly from Dashboard
+        function startFlow() {
+            switchView('view-step1');
+            updateProgressBar(1, 0);
+            validateRealTimeFields();
+        }
+
+        // Progress Bar Synchronization UI
+        function updateProgressBar(stepNumber, progressPercent) {
+            document.getElementById('progress-line-fill').style.width = `${progressPercent}%`;
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById(`step-dot-${i}`);
+                if (i <= stepNumber) {
+                    dot.className = "w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-all duration-300 step-active";
+                } else {
+                    dot.className = "w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-all duration-300 step-todo";
+                }
+            }
+        }
+
+        // PANTALLA 1: SUBMIT AND VALIDATE ADMISSION
+        function submitStep1() {
+            const age = parseFloat(document.getElementById('form-age').value) || 0;
+            const income = parseFloat(document.getElementById('form-income').value) || 0;
+            const amount = parseFloat(document.getElementById('form-amount').value) || 0;
+
+            if (age < 18 || age > 75) {
+                triggerNotification("Admisión denegada: Edad debe encontrarse estrictamente entre 18 y 75 años.", "error");
+                return;
+            }
+            if (income < 1025) {
+                triggerNotification("Admisión denegada: Ingreso líquido mínimo referencial no alcanzado.", "error");
+                return;
+            }
+            if (amount <= 0) {
+                triggerNotification("Ingrese un monto de solicitud válido a evaluar.", "error");
+                return;
+            }
+
+            // Move to Step 2
+            switchView('view-step2');
+            updateProgressBar(2, 33);
+            runStep2Simulation();
+        }
+
+        // PANTALLA 2: SIMULATE inteligente OCR DOCS RUNTIME
+        function runStep2Simulation() {
+            const bar = document.getElementById('doc-sim-progress');
+            const txt = document.getElementById('doc-sim-text');
+            const btn = document.getElementById('btn-proceed-evaluation');
+
+            // Reset UI states
+            bar.style.width = '0%';
+            btn.disabled = true;
+            btn.className = "w-full bg-gray-300 text-gray-500 p-3 rounded-lg text-xs font-semibold tracking-wide flex justify-center items-center space-x-2 transition-all cursor-not-allowed";
+
+            setTimeout(() => {
+                bar.style.width = '35%';
+                txt.innerHTML = '<i class="fa-solid fa-robot mr-1.5 text-blue-500 animate-spin"></i> Validando Cédula con Registro RENIEC...';
+                document.getElementById('status-doc-1').innerHTML = '<i class="fa-solid fa-check-circle text-emerald-500"></i> <span class="text-emerald-700">✓ Válido</span>';
+                document.getElementById('status-doc-1').className = "text-xs font-bold bg-emerald-50 px-2 py-1 rounded flex items-center space-x-1";
+            }, 1000);
+
+            setTimeout(() => {
+                bar.style.width = '70%';
+                txt.innerHTML = '<i class="fa-solid fa-robot mr-1.5 text-blue-500 animate-spin"></i> Analizando consistencia SUNAT comprobante...';
+                document.getElementById('status-doc-2').innerHTML = '<i class="fa-solid fa-check-circle text-emerald-500"></i> <span class="text-emerald-700">✓ Válido</span>';
+                document.getElementById('status-doc-2').className = "text-xs font-bold bg-emerald-50 px-2 py-1 rounded flex items-center space-x-1";
+            }, 2200);
+
+            setTimeout(() => {
+                bar.style.width = '100%';
+                txt.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5 text-emerald-500"></i> Carpeta de documentos validada con éxito.';
+                document.getElementById('status-doc-3').innerHTML = '<i class="fa-solid fa-check-circle text-emerald-500"></i> <span class="text-emerald-700">✓ Válido</span>';
+                document.getElementById('status-doc-3').className = "text-xs font-bold bg-emerald-50 px-2 py-1 rounded flex items-center space-x-1";
+                
+                // Enable button
+                btn.disabled = false;
+                btn.className = "w-full bg-servicredit-blue hover:bg-opacity-95 text-white p-3 rounded-lg text-xs font-semibold tracking-wide flex justify-center items-center space-x-2 shadow cursor-pointer transition-all active:scale-95";
+            }, 3500);
+        }
+
+        function submitStep2() {
+            switchView('view-step3');
+            updateProgressBar(3, 66);
+            runStep3ScoringLogic();
+        }
+
+        // PANTALLA 3: ENGINE SCORING SIMULATION RULES
+        function runStep3ScoringLogic() {
+            const income = parseFloat(document.getElementById('form-income').value) || 0;
+            const amount = parseFloat(document.getElementById('form-amount').value) || 0;
+            const months = parseFloat(document.getElementById('form-months').value) || 12;
+
+            // Score Rule Determination based on criteria text requirement
+            // Rules:
+            // If Income >= 3 * Amount/Months equivalent or simple calculation rule request
+            // Request Rule text: Si Ingreso >= 3 * Monto solicitado = EXCELENTE (Score ~95)
+            // Si Ingreso >= 2 * Monto solicitado = BUENO (Score ~82)
+            // Si Ingreso >= 1.5 * Monto solicitado = ACEPTABLE (Score ~68)
+            // Si Ingreso < 1.5 * Monto solicitado = RECHAZADO (Score ~40)
+            
+            let finalScore = 40;
+            let ratingText = "RECHAZADO";
+            let badgeClass = "bg-rose-50 text-rose-700 border border-rose-200";
+            let approved = false;
+
+            let ratioText = "";
+            let ratioIcon = "";
+
+            if (income >= (3 * amount)) {
+                finalScore = 96;
+                ratingText = "EXCELENTE (Riesgo Muy Bajo)";
+                badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-300";
+                approved = true;
+                ratioText = "Excelente (>= 3x)";
+                ratioIcon = "<i class='fa-solid fa-circle-check text-emerald-500 mr-1.5'></i>";
+            } else if (income >= (2 * amount)) {
+                finalScore = 84;
+                ratingText = "BUENO (Riesgo Controlado)";
+                badgeClass = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+                approved = true;
+                ratioText = "Bueno (>= 2x)";
+                ratioIcon = "<i class='fa-solid fa-circle-check text-emerald-500 mr-1.5'></i>";
+            } else if (income >= (1.5 * amount)) {
+                finalScore = 68;
+                ratingText = "ACEPTABLE (Sujeto a Límites)";
+                badgeClass = "bg-amber-50 text-amber-700 border border-amber-200";
+                approved = true;
+                ratioText = "Aceptable (>= 1.5x)";
+                ratioIcon = "<i class='fa-solid fa-circle-check text-amber-500 mr-1.5'></i>";
+            } else {
+                finalScore = 38;
+                ratingText = "RECHAZADO POR POLÍTICA";
+                badgeClass = "bg-rose-50 text-rose-700 border border-rose-200";
+                approved = false;
+                ratioText = "Insuficiente (< 1.5x)";
+                ratioIcon = "<i class='fa-solid fa-circle-xmark text-rose-500 mr-1.5'></i>";
+            }
+
+            // Animate Circle & Number
+            setTimeout(() => {
+                document.getElementById('score-circle-bar').style.strokeDasharray = `${finalScore}, 100`;
+                document.getElementById('score-number').innerText = finalScore;
+                
+                const lbl = document.getElementById('score-label-badge');
+                lbl.innerText = ratingText;
+                lbl.className = `inline-block px-3 py-1 rounded-full text-xs font-bold ${badgeClass}`;
+
+                // Set evaluated texts
+                document.getElementById('crit-ratio').innerHTML = `${ratioIcon} ${ratioText}`;
+                document.getElementById('crit-age').innerHTML = `<i class='fa-solid fa-circle-check text-emerald-500 mr-1.5'></i> Apto`;
+                document.getElementById('crit-history').innerHTML = `<i class='fa-solid fa-circle-check text-emerald-500 mr-1.5'></i> Score SBS normal (100%)`;
+
+                // Activate action button
+                const btn = document.getElementById('btn-send-approval');
+                btn.disabled = false;
+                btn.className = "w-full bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-lg text-xs font-semibold tracking-wide flex justify-center items-center space-x-2 shadow cursor-pointer transition-all active:scale-95";
+                
+                // Save approval state variable into temporary element attribute
+                btn.setAttribute('data-approved', approved ? "true" : "false");
+            }, 1500);
+        }
+
+        function submitStep3() {
+            const isApproved = document.getElementById('btn-send-approval').getAttribute('data-approved') === "true";
+            switchView('view-step4');
+            updateProgressBar(4, 100);
+
+            const amount = parseFloat(document.getElementById('form-amount').value) || 0;
+            const months = parseFloat(document.getElementById('form-months').value) || 12;
+            const cuota = calculateCuota(amount, months);
+
+            if (isApproved) {
+                document.getElementById('box-approved').classList.remove('hidden');
+                document.getElementById('box-rejected').classList.add('hidden');
+                
+                document.getElementById('res-amount').innerText = `S/ ${amount.toFixed(2)}`;
+                document.getElementById('res-months').innerText = `${months} meses`;
+                document.getElementById('res-cuota').innerText = `S/ ${cuota.toFixed(2)}`;
+                triggerNotification("Estrategia completada: Crédito listo para firma electrónica.", "success");
+            } else {
+                document.getElementById('box-approved').classList.add('hidden');
+                document.getElementById('box-rejected').classList.remove('hidden');
+                triggerNotification("Proceso finalizado: Solicitud denegada por score adverso.", "error");
+            }
+        }
+
+        // RESET BUTTONS
+        function resetToDashboard() {
+            switchView('view-dashboard');
+        }
+
+        function downloadPDFSim() {
+            triggerNotification("Generando archivo PDF con firma encriptada SHA256... Descarga iniciada.", "success");
+        }
+
+        // CHAT SUPPORT WIDGET SIMULATION
+        function toggleChat() {
+            const chat = document.getElementById('chat-box');
+            chat.classList.toggle('hidden');
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const msgContainer = document.getElementById('chat-messages');
+            
+            // Append user msg
+            const userMsg = document.createElement('div');
+            userMsg.className = "bg-blue-600 p-2 rounded-lg text-white text-xs shadow-sm max-w-[85%] ml-auto text-right";
+            userMsg.innerText = text;
+            msgContainer.appendChild(userMsg);
+            
+            input.value = "";
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+
+            // Delayed response simulation
+            setTimeout(() => {
+                const botMsg = document.createElement('div');
+                botMsg.className = "bg-white p-2 rounded-lg border border-gray-200 text-gray-600 shadow-sm max-w-[85%]";
+                botMsg.innerText = "Entendido. Su expediente digital está enlazado directamente a los servidores SBS. La automatización garantiza transparencia absoluta.";
+                msgContainer.appendChild(botMsg);
+                msgContainer.scrollTop = msgContainer.scrollHeight;
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
